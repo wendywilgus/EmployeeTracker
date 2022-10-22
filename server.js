@@ -46,12 +46,12 @@ function addRole () {
             {
                 type: "input",
                 message: "What is the employee's role?",
-                name: "newrole",
+                name: "title",
             },
             {
                 type: "input",
                 message: "What is the employee's name?",
-                name: "employee",
+                name: "name",
             },
             {
                 type: "input",
