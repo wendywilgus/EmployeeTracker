@@ -125,33 +125,86 @@ async function addRole()  {
 };
 
 //function to add a new employee to Employee table
-async function addEmployee () {
+async function addEmployee() {
+    const rolesArray = [];
+    const rolesEntry = [];
+    const employees = ['None'];
+    const employeesEntry = [];
+
+    await query(`SELECT id, CONCAT(first_name, " ", last_name) AS name FROM employee`)
+        .then(res => {
+            res.forEach(employee => {
+                employees.push(employee.name)
+                employeesEntry.push(employee);
+        });
+    });
+    await query(`SELECT id, title FROM role`)
+        .then(res => {
+            res.forEach(role => {
+                rolesArray.push(role.title)
+                rolesEntry.push(role);
+            });
+        });
     inquirer
         .prompt([
             {
                 type: "input",
                 message: "What is the employee's first name?",
-                name: "firstname",
+                name: "first_name",
+                validate: (input) => {
+                    if(input === ""){
+                        return "Please enter a name for the employee."
+                    }
+                    return true;
+                }
             },
             {
                 type: "input",
                 message: "What is the employee's last name?",
                 name: "lastname",
+                validate: (input) => {
+                    if(input === ""){
+                        return "Please enter a name for the employee."
+                    }
+                    return true;
+                }
             },
             {
-                type: "input",
+                type: "list",
                 message: "What is the employee's role?",
                 name: "role",
+                choices: rolesArray,
             },
             {
-                type: "input",
+                type: "list",
                 message: "Who is the employee's manager?",
                 name: "manager",
+                choices: employees,
             },
         ])//add to database
+        .then(async ans => {
+            const {first_name, last_name, roles, manager} = ans;
+            let role_id;
+            rolesEntry.forEach(role => {
+                if(role.title === roles){
+                    role_id = parseInt(role.id);
+                }
+            })
+            let manager_id;
+            employeesEntry.forEach(employee => {
+                if(employee.name === manager){
+                    manager_id = parseInt(employee.id);
+                }
+            });
+            await query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)`, [first_name, last_name, role_id, manager_id])
+            .then(res => console.log(`Added ${first_name} ${last_name} to database.`));
+            
+            mainPrompt();
+        });
 };
 
-function updateRole ()  {
+//function to update employee role
+async function updateRole()  {
     inquirer
         .prompt([
             {
