@@ -3,7 +3,6 @@ const inquirer = require("inquirer");
 const mysql = require("mysql2");
 const consoleTable = require('console.table');
 const util = require('util');
-const { ADDRGETNETWORKPARAMS } = require("dns");
 require('dotenv').config();
 
 const db = mysql.createConnection(
@@ -28,19 +27,60 @@ const mainPrompt = () => {
                     "View All Departments", 
                     "View All Roles", 
                     "View All Employees", 
+                    "View By Manager",
                     "Add a Department", 
                     "Add a Role", 
                     "Add an Employee", 
-                    "Update an Employee Role"],
+                    "Update an Employee Role",
+                    "Update Employee Manager",
+                    "Quit"],
                 name: "mainlist",
             },
         ])
-}
-
-function viewDepartments
-    select all of the departments from a table
-function viewRoles
-    select all of the roles from a table
+        .then(ans => {
+            switch(ans.choice){
+                case "Quit":
+                    console.log('Exit');
+                    break;
+                case "View All Departments":
+                    db.query(`SELECT * FROM department ORDER BY department.name ASC`, function (err, results) {
+                        console.table(`/n`, results);
+                        mainPrompt();
+                    });
+                    break;
+                case "View All Roles":
+                    db.query(`SELECT role.title, role.id, department.name AS department, role.salary FROM role INNER JOIN department ON role.department_id = department.id ORDER BY role.title ASC`, function (err, results)    {
+                        console.table(`/n`, results);
+                        mainPrompt();
+                    });
+                    break;
+                case "View All Employees":
+                    db.query(`SELECT a.id, a.first_name, a.last_name, role.title, department.name AS department, role.salary, CONCAT(b.first_name, " ", b.last_name) AS manager FROM employee a INNER JOIN role ON a.role_id = role.id INNER JOIN department ON role.department_id = department.id LEFT JOIN employee b ON b.id = a.manager_id ORDER BY a.last_name ASC`, function (err, results){
+                        console.table(`/n`, results);
+                        mainPrompt();
+                    });
+                    break;
+                case "View By Manager":
+                    viewEmployeesbyManager();
+                    break;
+                case "Add Department":
+                    addDepartment();
+                    break;
+                case "Add Role":
+                    addRole();
+                    break;
+                case "Add Employee":
+                    addEmployee();
+                    break;
+                case "Update Employee Role":
+                    updateRole();
+                    break;
+                case "Update Employee Manager":
+                    updateManager();
+                    break;             
+            };
+        });
+};
 
 async function viewEmployeesbyManager(){
     const employees = [];
@@ -58,10 +98,25 @@ async function viewEmployeesbyManager(){
             .prompt([
                 {
                     type: "list",
-                    message: ""
+                    message: "Whose team would you like to view?",
+                    name: "managers",
+                    choices: employees
                 }
             ])
-}
+            .then(async ans => {
+                let manager_id;
+                employeesEntry.forEach(employee => {
+                    if(employee.name === ans.manager){
+                        manager_id = employee.id;
+                    }
+                });
+
+                await query(`SELECT * FROM employee WHERE manager_id = ?`, manager_id)
+                    .then(res => console.table(`/n`, res));
+                
+                mainPrompt();                
+            });
+};
      
 
 const addDepartment = () =>  {
