@@ -41,8 +41,28 @@ function viewDepartments
     select all of the departments from a table
 function viewRoles
     select all of the roles from a table
-function viewEmployees
-    select all of the employees from a table  
+
+async function viewEmployeesbyManager(){
+    const employees = [];
+    const employeesEntry = [];
+
+    await query(`SELECT id, CONCAT(employee.first_name, " ", employee.last_name) AS name FROM employee`)
+        .then(res => {
+            res.forEach(employee => {
+                employees.push(employee.name)
+                employeesEntry.push(employee);
+            });
+        });
+    
+        inquirer    
+            .prompt([
+                {
+                    type: "list",
+                    message: ""
+                }
+            ])
+}
+     
 
 const addDepartment = () =>  {
     inquirer
@@ -205,13 +225,101 @@ async function addEmployee() {
 
 //function to update employee role
 async function updateRole()  {
+    const employList = [];
+    const employeesEntry = [];
+    const rolesList = [];
+    const rolesEntry = [];
+    await query(`SELECT id, CONCAT(employee.first_name, " ", employee.last_name) AS name FROM employee`)
+        .then(res => res.forEach(person => {
+            employeesEntry.push(person);
+            employList.push(person.name)
+        }));
+
+    await query(`SELECT title, id FROM role`)
+        .then(res => res.forEach(role => {
+            rolesEntry.push(role);
+        }));
+
     inquirer
         .prompt([
             {
-                type: "input",
+                type: "list",
+                message: "Which employee would you like to update?",
+                choices: employeeList,
+                name: "employee"
+            },
+            {
+                type: "list",
                 message: "What will the new role be for this employee?",
+                choices: rolesList,
                 name: "newrole",
             },
         ])//update role in employee db
+        .then(async ans => {
+            let employee_id;
+            let role_id;
+            employeesEntry.forEach(person => {
+                if(person.name === ans.person){
+                    employee_id = parseInt(person.id);
+                }
+            })
+        
+            await query(`UPDATE employee SET role_id = ? WHERE id = ?`, [role_id, employee_id])
+                .then(ans => console.log(`Role for ${ans.person} has been updated.`));
+
+            mainPrompt();
+        });
 };
 
+//function to update Employee's manager
+async function updateManager() {
+    const employees = [];
+    const employeesEntry = [];
+
+    await query(`SELECT id, CONCAT(employee.first_name, " ", employee.last_name,) AS name FROM employee`)
+        .then(res => {
+            res.forEach(person => {
+                employees.push(person.name);
+                employeesEntry.push(person);
+            });
+        });
+    
+    inquirer    
+        .prompt([
+            {
+                type: "list",
+                message: "Which employee's manager would you like to update?",
+                choices: employees,
+                name: "employee",
+            },
+            {
+                type: "list",
+                message: "Who will the new manager be? Select same employee if there is no manager.",
+                choices: employees,
+            }
+        ])
+        .then( async ans => {
+            let manager_id;
+            let employee_id;
+            employeesEntry.forEach(person => {
+                if (ans.employee == ans.newManager){
+                    manager_id = null;
+                }else{
+                    if(person.name === ans.newManager){
+                        manager_id = parseInt(person.id);
+                    }
+                }
+
+                if(ans.employee === person.name){
+                    employee_id = person.id;
+                }
+            });
+
+            await query(`UPDATE employee SET manager_id = ? WHERE id = ?`, [manager_id, employee_id])
+                .then(ans => 
+                    console.log(`Manager for ${ans.employee} has been updated.`))
+
+            mainPrompt();
+        });
+}
+module.exports = mainPrompt;
