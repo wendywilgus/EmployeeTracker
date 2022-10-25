@@ -1,21 +1,23 @@
-
-const inquirer = require("inquirer");
 const mysql = require("mysql2");
+const inquirer = require('inquirer');
 const consoleTable = require('console.table');
 const util = require('util');
-require('dotenv').config();
+
+require('dotenv').config()
 
 const db = mysql.createConnection(
     {
         host: 'localhost',
-        user: 'root',
-        password: process.env.pw,
-        database: 'tracker_db'
+        user: process.env.DB_USER,
+        password: process.env.DB_PW,
+        database: process.env.DB_NAME,
     },
 );
 
+//constant to allow async/await
 const query = util.promisify(db.query).bind(db);
 
+//Main prompt for starting questios
 const mainPrompt = () => {
     console.log("Welcome to your Employee Tracker.");
     inquirer
@@ -35,9 +37,9 @@ const mainPrompt = () => {
                     "Update Employee Manager",
                     "Quit"],
                 name: "mainlist",
-            },
+            }
         ])
-        .then(ans => {
+        .then((ans) => {
             switch(ans.choice){
                 case "Quit":
                     console.log('Exit');
@@ -377,4 +379,5 @@ async function updateManager() {
             mainPrompt();
         });
 }
+mainPrompt();
 module.exports = mainPrompt;
