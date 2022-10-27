@@ -2,8 +2,19 @@ const mysql = require("mysql2");
 const inquirer = require('inquirer');
 const consoleTable = require('console.table');
 const util = require('util');
+const express = require('express');
+const app = express();
+
 
 require('dotenv').config()
+
+const PORT = process.env.PORT || 3001;
+
+app.use(express.urlencoded({ extend: false }));
+app.use(express.json());
+
+app.use((req, res) => res.status(404).end());
+app.listen(PORT);
 
 const db = mysql.createConnection(
     {
@@ -39,8 +50,9 @@ const mainPrompt = () => {
                 name: "mainlist",
             }
         ])
-        .then((ans) => {
-            switch(ans.choice){
+        .then((answer) => {
+            //switch path based on user choice from list
+            switch(answer.mainlist){
                 case "Quit":
                     console.log('Exit');
                     break;
@@ -108,7 +120,7 @@ async function viewEmployeesbyManager(){
             .then(async ans => {
                 let manager_id;
                 employeesEntry.forEach(employee => {
-                    if(employee.name === ans.manager){
+                    if(employee.name === ans.managers){
                         manager_id = employee.id;
                     }
                 });
