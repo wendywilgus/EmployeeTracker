@@ -77,23 +77,24 @@ const mainPrompt = () => {
                 case "View By Manager":
                     viewEmployeesbyManager();
                     break;
-                case "Add Department":
+                case "Add a Department":
                     addDepartment();
                     break;
-                case "Add Role":
+                case "Add a Role":
                     addRole();
                     break;
-                case "Add Employee":
+                case "Add an Employee":
                     addEmployee();
                     break;
-                case "Update Employee Role":
+                case "Update an Employee Role":
                     updateRole();
                     break;
                 case "Update Employee Manager":
                     updateManager();
-                    break;             
+                    break;     
+                default: console.log("error not found", answer);        
             };
-        });
+        })
 };
 
 async function viewEmployeesbyManager(){
@@ -139,7 +140,7 @@ const addDepartment = () =>  {
             {
                 type: "input",
                 message: "What is the name of the department?",
-                name: "department",
+                name: "name",
                 validate: (input) => {
                     if (input.trim() === "") {
                         return false;
@@ -152,7 +153,7 @@ const addDepartment = () =>  {
             db.query(`INSERT INTO department (name) VALUES (?)`, ans.name, function (err, results) {
                 mainPrompt();
             });
-        });
+        })
 };
 
 //add a role to Role table
