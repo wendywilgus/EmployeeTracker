@@ -208,8 +208,8 @@ async function addRole()  {
                 }
             });
             let salary = parseInt(ans.salary);
-            await query(`INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)`, [ans.title, salary, department_id]
-                .then(res => console.log(`Added ${ans.title} to roles.`)));
+            await query(`INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)`, [ans.title, salary, department_id])
+                .then(res => console.log(`Added ${ans.title} to roles.`));
             mainPrompt();
         });
 };
@@ -251,7 +251,7 @@ async function addEmployee() {
             {
                 type: "input",
                 message: "What is the employee's last name?",
-                name: "lastname",
+                name: "last_name",
                 validate: (input) => {
                     if(input === ""){
                         return "Please enter a name for the employee."
@@ -295,18 +295,19 @@ async function addEmployee() {
 
 //function to update employee role
 async function updateRole()  {
-    const employList = [];
+    const employeesList = [];
     const employeesEntry = [];
     const rolesList = [];
     const rolesEntry = [];
-    await query(`SELECT id, CONCAT(employee.first_name, " ", employee.last_name) AS name FROM employee`)
+    await query('SELECT id, CONCAT(employee.first_name, " ", employee.last_name) AS name FROM employee')
         .then(res => res.forEach(person => {
             employeesEntry.push(person);
-            employList.push(person.name)
+            employeesList.push(person.name)
         }));
 
-    await query(`SELECT title, id FROM role`)
+    await query('SELECT title, id FROM role')
         .then(res => res.forEach(role => {
+            rolesList.push(role.title);
             rolesEntry.push(role);
         }));
 
@@ -315,7 +316,7 @@ async function updateRole()  {
             {
                 type: "list",
                 message: "Which employee would you like to update?",
-                choices: employeeList,
+                choices: employeesList,
                 name: "employee"
             },
             {
@@ -333,8 +334,14 @@ async function updateRole()  {
                     employee_id = parseInt(person.id);
                 }
             })
+
+            rolesEntry.forEach(role => {
+                if(role.title === ans.title){
+                    role_id = parseInt(role.id);
+                }
+            })
         
-            await query(`UPDATE employee SET role_id = ? WHERE id = ?`, [role_id, employee_id])
+            await query('UPDATE employee SET role_id = ? WHERE id = ?', [role_id, employee_id])
                 .then(ans => console.log(`Role for ${ans.person} has been updated.`));
 
             mainPrompt();
@@ -346,7 +353,7 @@ async function updateManager() {
     const employees = [];
     const employeesEntry = [];
 
-    await query(`SELECT id, CONCAT(employee.first_name, " ", employee.last_name,) AS name FROM employee`)
+    await query('SELECT id, CONCAT(employee.first_name, " ", employee.last_name,) AS name FROM employee')
         .then(res => {
             res.forEach(person => {
                 employees.push(person.name);
@@ -366,6 +373,7 @@ async function updateManager() {
                 type: "list",
                 message: "Who will the new manager be? Select same employee if there is no manager.",
                 choices: employees,
+                name: newManager,
             }
         ])
         .then( async ans => {
@@ -385,12 +393,12 @@ async function updateManager() {
                 }
             });
 
-            await query(`UPDATE employee SET manager_id = ? WHERE id = ?`, [manager_id, employee_id])
+            await query('UPDATE employee SET manager_id = ? WHERE id = ?', [manager_id, employee_id])
                 .then(ans => 
                     console.log(`Manager for ${ans.employee} has been updated.`))
 
             mainPrompt();
-        });
+        })
 }
 mainPrompt();
 module.exports = mainPrompt;
